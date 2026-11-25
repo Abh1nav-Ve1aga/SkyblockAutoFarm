@@ -15,6 +15,9 @@ Loop 6 {
 
 phases.Push({keys: ["s"], duration: 3800, jitter: true})
 
+; Release all held keys when the script exits or reloads.
+OnExit(ReleaseAll)
+
 F1::
 {
     global toggle, phaseIndex, nextChange
@@ -25,16 +28,16 @@ F1::
     Critical("On")
 
     toggle := !toggle
-    Send("{F6}")  ; Toggle the autoclicker once.
 
     if toggle {
+        Send("{q down}")
         phaseIndex := 1
         nextChange := 0
         SetTimer(AdvanceMovement, 20)
         AdvanceMovement()
     } else {
         SetTimer(AdvanceMovement, 0)
-        ReleaseMovement()
+        ReleaseAll()
     }
 
     Critical("Off")
@@ -46,8 +49,10 @@ AdvanceMovement()
 
     Critical("On")
 
-    if !toggle || A_TickCount < nextChange
+    if !toggle || A_TickCount < nextChange {
+        Critical("Off")
         return
+    }
 
     ReleaseMovement()
 
@@ -69,4 +74,10 @@ AdvanceMovement()
 ReleaseMovement()
 {
     Send("{w up}{a up}{s up}{d up}")
+}
+
+ReleaseAll(*)
+{
+    Send("{q up}")
+    ReleaseMovement()
 }
