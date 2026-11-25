@@ -1,49 +1,72 @@
 ﻿#Requires AutoHotkey v2.0
-#SingleInstance force
+#SingleInstance Force
 
 toggle := false
-F1:: {
-	offset := 0
-	global toggle := !toggle
-	while(toggle){
-		if toggle {
-			; always break crops
-			Send("{q down}")
-		
-			; transition into "wa" path
-			Send("{a down}")
-			Sleep(50)
-			Send("{a up}")
-			
-			loop 6 {
-				; "wa" path
-				Send("{a down}")
-				Send("{w down}")
-				offset := Random(0 , 200)
-				Sleep(72000+offset)
-				Send("{a up}")
-				Send("{w up}")
+phaseIndex := 1
+nextChange := 0
 
-				; "wd: path
-				Send("{d down}")
-				Send("{w down}")
-				offset := Random(0 , 200)
-				Sleep(72000+offset)
-				Send("{d up}")
-				Send("{w up}")
-			}
-			
-			; down path
-			Send("{s down}")
-			offset := Random(0 , 200)
-			Sleep(3800+offset)
-			Send("{s up}")
-		}			
-	}
-	else{
-		Send("{q up}")
-		Send("{w up}")
-		Send("{a up}")
-		Send("{s up}")
-	}
+; Movement sequence: initial A, six WA/WD pairs, then S.
+phases := [{keys: ["a"], duration: 50, jitter: false}]
+
+Loop 6 {
+    phases.Push({keys: ["w", "a"], duration: 72000, jitter: true})
+    phases.Push({keys: ["w", "d"], duration: 72000, jitter: true})
+}
+
+phases.Push({keys: ["s"], duration: 3800, jitter: true})
+
+F1::
+{
+    global toggle, phaseIndex, nextChange
+
+    ; Wait for release so holding F1 doesn't repeatedly toggle.
+    KeyWait("F1")
+
+    Critical("On")
+
+    toggle := !toggle
+    Send("{F6}")  ; Toggle the autoclicker once.
+
+    if toggle {
+        phaseIndex := 1
+        nextChange := 0
+        SetTimer(AdvanceMovement, 20)
+        AdvanceMovement()
+    } else {
+        SetTimer(AdvanceMovement, 0)
+        ReleaseMovement()
+    }
+
+    Critical("Off")
+}
+
+AdvanceMovement()
+{
+    global toggle, phases, phaseIndex, nextChange
+
+    Critical("On")
+
+    if !toggle || A_TickCount < nextChange
+        return
+
+    ReleaseMovement()
+
+    phase := phases[phaseIndex]
+
+    for key in phase.keys
+        Send("{" key " down}")
+
+    offset := phase.jitter ? Random(0, 200) : 0
+    nextChange := A_TickCount + phase.duration + offset
+
+    phaseIndex += 1
+    if phaseIndex > phases.Length
+        phaseIndex := 1
+
+    Critical("Off")
+}
+
+ReleaseMovement()
+{
+    Send("{w up}{a up}{s up}{d up}")
 }
