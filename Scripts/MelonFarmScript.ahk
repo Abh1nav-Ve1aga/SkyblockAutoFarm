@@ -30,7 +30,7 @@ F1::
     toggle := !toggle
 
     if toggle {
-        Send("{q down}")
+        Send("{z down}")
         phaseIndex := 1
         nextChange := 0
         SetTimer(AdvanceMovement, 20)
@@ -78,6 +78,6 @@ ReleaseMovement()
 
 ReleaseAll(*)
 {
-    Send("{q up}")
+    Send("{z up}")
     ReleaseMovement()
 }
