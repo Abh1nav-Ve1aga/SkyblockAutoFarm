@@ -18,12 +18,12 @@ phases.Push({keys: ["s"], duration: 3800, jitter: true})
 ; Release all held keys when the script exits or reloads.
 OnExit(ReleaseAll)
 
-F1::
+F12::
 {
     global toggle, phaseIndex, nextChange
 
     ; Wait for release so holding F1 doesn't repeatedly toggle.
-    KeyWait("F1")
+    KeyWait("F12")
 
     Critical("On")
 
